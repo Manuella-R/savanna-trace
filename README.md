@@ -127,8 +127,6 @@ The frontend should display the latest IP address in real-time. If the backend p
 https://github.com/user-attachments/assets/25266ac4-dadb-4498-9a77-2829243c6a82
 
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Acknowledgments
 
 - Special thanks to the creators of the MQTT protocol and the libraries used in this project.
