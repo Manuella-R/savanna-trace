@@ -1,144 +1,194 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import mqtt, { MqttClient } from 'mqtt'; // Ensure MqttClient is imported
-import HelloWorld from './components/HelloWorld.vue';
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import mqtt, { MqttClient } from "mqtt";
 
-// Define MQTT configuration
+// MQTT Configuration
 const mqttOptions = {
-  clientId: `Vue_Client_${Math.random().toString(16).slice(3)}`, // Unique ID for the client
+  clientId: `Vue_Client_${Math.random().toString(16).slice(3)}`,
   clean: true,
   reconnectPeriod: 1000,
 };
+const brokerUrl = "ws://broker.emqx.io:8083/mqtt"; // WebSocket URL
+const topic = "gateway/ip"; // MQTT topic to subscribe to
 
-// MQTT Broker URL (Update with the broker's URL from your Python backend)
-const brokerUrl = 'ws://broker.emqx.io:8083/mqtt'; // Use WebSocket URL for browser connections
-const topic = 'gateway/ip'; // Topic to subscribe to
+// Reactive Variables
+const connectionStatus = ref("Disconnected");
+const loading = ref(false);
+const receivedIp = ref<string | null>(null); // Latest IP
+const ipList = ref<string[]>([]); // List of all received IPs
 
-// Reactive variables
-const messageList = ref<string[]>([]); // Array to store all received messages
-
-// Create MQTT client instance
 let client: MqttClient | null = null;
 
-// Connect to MQTT broker and subscribe
+// Connect to the MQTT broker and set up event listeners
 onMounted(() => {
   client = mqtt.connect(brokerUrl, mqttOptions);
 
-  client.on('connect', () => {
-    console.log('Connected to MQTT broker');
+  client.on("connect", () => {
+    connectionStatus.value = "Connected";
+    console.log("Connected to MQTT broker");
     client?.subscribe(topic, (err) => {
       if (!err) {
         console.log(`Subscribed to topic: ${topic}`);
       } else {
-        console.error('Failed to subscribe:', err);
+        console.error("Failed to subscribe:", err);
       }
     });
   });
 
-  client.on('message', (topic, message) => {
+  client.on("message", (topic, message) => {
     console.log(`Received message on ${topic}: ${message.toString()}`);
-    messageList.value.push(message.toString()); // Append the new message to the list
+    const ip = message.toString();
+    receivedIp.value = ip;
+
+    // Add the IP to the list, avoiding duplicates
+    if (!ipList.value.includes(ip)) {
+      ipList.value.unshift(ip); // Add to the top of the list
+    }
+
+    loading.value = false; // Stop loading after receiving the message
   });
 
-  client.on('error', (err) => {
-    console.error('MQTT Error:', err);
+  client.on("error", (err) => {
+    console.error("MQTT Error:", err);
+    connectionStatus.value = "Error";
   });
 });
 
-// Cleanup when the component is unmounted
 onBeforeUnmount(() => {
-  client?.end(); // Close the connection
+  client?.end(); // Disconnect from the MQTT broker
 });
+
+// Manually fetch the latest IP address
+const fetchIpAddress = () => {
+  if (connectionStatus.value === "Connected") {
+    loading.value = true; // Show loading while waiting for a message
+    console.log("Fetching latest IP address...");
+  } else {
+    alert("MQTT broker is not connected. Please try again.");
+  }
+};
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div class="app">
+    <!-- Header -->
+    <header>
+      <img alt="Vue logo" class="logo" src="@/assets/logo.svg" />
+      <h1>Gateway IP Viewer</h1>
+      <p>View the latest and past IP addresses received via MQTT.</p>
+    </header>
 
-    <div class="wrapper">
-      <HelloWorld msg="Welcome to Savanna Trace!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+    <!-- Connection Status -->
+    <div class="status">
+      <strong>Connection Status:</strong>
+      <span :class="connectionStatus.toLowerCase()">{{ connectionStatus }}</span>
     </div>
-  </header>
 
-  <main>
-    <h2>Received MQTT Messages</h2>
-    <div v-if="messageList.length">
-      <p v-for="(msg, index) in messageList" :key="index">
-        <strong>Message {{ index + 1 }}:</strong> {{ msg }}
-      </p>
-    </div>
-    <p v-else>No messages received yet...</p>
-  </main>
+    <!-- Main Interface -->
+    <main>
+      <!-- List of IPs -->
+      <div class="ip-list">
+        <h2>IP Address History</h2>
+        <ul>
+          <li v-for="(ip, index) in ipList" :key="index">
+            <strong>{{ index + 1 }}.</strong> {{ ip }}
+          </li>
+        </ul>
+        <p v-if="!ipList.length">No IP addresses received yet.</p>
+      </div>
 
-  <RouterView />
+      <!-- Latest IP Address -->
+      <div class="latest-ip">
+        <h2>Latest IP Address</h2>
+        <p v-if="receivedIp" class="latest-ip-value">{{ receivedIp }}</p>
+        <p v-else>No IP address received yet.</p>
+      </div>
+
+      <!-- Fetch IP Button -->
+      <button @click="fetchIpAddress" :disabled="loading">
+        {{ loading ? "Fetching..." : "Get Latest IP" }}
+      </button>
+    </main>
+  </div>
 </template>
 
 <style scoped>
-/* Styles remain the same as the original */
+/* General Styles */
+.app {
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
 header {
-  line-height: 1.5;
-  max-height: 100vh;
+  margin-bottom: 20px;
 }
 
 .logo {
-  display: block;
-  margin: 0 auto 2rem;
+  width: 100px;
+  margin-bottom: 10px;
 }
 
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+button {
+  background-color: #42b983;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+button:disabled {
+  background-color: #d3d3d3;
+  cursor: not-allowed;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+button:hover:not(:disabled) {
+  background-color: #368c71;
 }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
+/* Connection Status */
+.status {
+  margin: 20px 0;
+  font-size: 1.2rem;
 }
 
-nav a:first-of-type {
-  border: 0;
+.status .connected {
+  color: #42b983;
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
+.status .disconnected {
+  color: red;
+}
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
+.status .error {
+  color: orange;
+}
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+/* IP List */
+.ip-list {
+  margin: 20px 0;
+}
 
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
+.ip-list ul {
+  list-style: none;
+  padding: 0;
+}
 
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+.ip-list li {
+  background-color: #2e0202;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.latest-ip-value {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #42b983;
 }
 </style>
