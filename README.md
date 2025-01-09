@@ -118,14 +118,20 @@ The frontend should display the latest IP address in real-time. If the backend p
 ## Screenshots
 
 ### Frontend
-![Screenshot 2025-01-09 184341](https://github.com/user-attachments/assets/aadbaf9d-8124-414a-84c0-93a933a97c73)
+![Screenshot 2025-01-09 230849](https://github.com/user-attachments/assets/1ba4377b-e293-4adc-920f-c1d65efa8068)
+
+![Screenshot 2025-01-09 231208](https://github.com/user-attachments/assets/7bd88254-1b63-4c1a-91ac-6242e89a48ff)
+
 
 ### Backend
 ![Screenshot 2025-01-09 194711](https://github.com/user-attachments/assets/e635c9c3-1ab3-4adf-b81b-415854b3d986)
 
 ## Video Demo
-https://github.com/user-attachments/assets/25266ac4-dadb-4498-9a77-2829243c6a82
 
+https://github.com/user-attachments/assets/b1aea6a3-08c5-43cd-9f6a-dac82a737a5a
+
+
+https://github.com/user-attachments/assets/37f7c0ab-a4ba-42ba-b126-1889a2bee3f6
 
 ## Acknowledgments
 
