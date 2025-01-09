@@ -118,11 +118,13 @@ The frontend should display the latest IP address in real-time. If the backend p
 ## Screenshots
 
 ### Frontend
+![Screenshot 2025-01-09 184341](https://github.com/user-attachments/assets/aadbaf9d-8124-414a-84c0-93a933a97c73)
 
 ### Backend
+![Screenshot 2025-01-09 194711](https://github.com/user-attachments/assets/e635c9c3-1ab3-4adf-b81b-415854b3d986)
 
-## Video Demos
-
+## Video Demo
+https://github.com/user-attachments/assets/25266ac4-dadb-4498-9a77-2829243c6a82
 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
